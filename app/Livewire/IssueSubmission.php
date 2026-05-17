@@ -9,7 +9,8 @@ use Illuminate\Support\Str;
 
 class IssueSubmission extends Component
 {
-    public $nim = '';
+    public $user_type = 'student'; // student, lecturer, staff
+    public $id_number = ''; // Placeholder for NIM or NIP
     public $name = '';
     public $phone = '';
     public $category_id = '';
@@ -18,13 +19,17 @@ class IssueSubmission extends Component
     public $isSubmitted = false;
     public $ticketId = '';
 
-    protected $rules = [
-        'nim' => 'required|string|max:20',
-        'name' => 'required|string|max:255',
-        'phone' => 'required|string|max:20',
-        'category_id' => 'required|exists:categories,id',
-        'description' => 'required|string|min:10|max:1000',
-    ];
+    protected function rules()
+    {
+        return [
+            'user_type' => 'required|in:student,lecturer,staff',
+            'id_number' => 'required|string|max:30',
+            'name' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'required|string|min:10|max:1000',
+        ];
+    }
 
     protected $messages = [
         'nim.required' => 'NIM wajib diisi.',
@@ -53,20 +58,25 @@ class IssueSubmission extends Component
         $this->validate();
 
         $formattedPhone = $this->formatPhoneNumber($this->phone);
+        
+        $typePrefix = [
+            'student' => 'MHS',
+            'lecturer' => 'DSN',
+            'staff' => 'STF'
+        ][$this->user_type];
 
         $ticket = Ticket::create([
-            'uuid' => Str::uuid(),
-            'guest_nim' => $this->nim,
+            'guest_nim' => $this->id_number, // Tetap simpan di guest_nim/id_number
             'guest_name' => $this->name,
             'guest_phone' => $formattedPhone,
             'category_id' => $this->category_id,
-            'title' => 'Laporan Kendala Mahasiswa - ' . $this->nim,
+            'title' => '[' . $typePrefix . '] Laporan Kendala - ' . $this->id_number,
             'description' => $this->description,
             'status' => 'open',
             'priority' => 'medium',
         ]);
 
-        $this->ticketId = $ticket->uuid;
+        $this->ticketId = (string) $ticket->uuid;
         $this->isSubmitted = true;
     }
 

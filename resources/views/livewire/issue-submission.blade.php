@@ -41,11 +41,20 @@
             <!-- Form State -->
             <form wire:submit="submit" class="space-y-5">
                 
-                <!-- NIM Input -->
+                <!-- User Type Selection -->
+                <div class="flex p-1 bg-slate-100 rounded-lg">
+                    <button type="button" wire:click="$set('user_type', 'student')" class="flex-1 py-1.5 text-xs font-bold rounded-md transition-all {{ $user_type === 'student' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700' }}">MAHASISWA</button>
+                    <button type="button" wire:click="$set('user_type', 'lecturer')" class="flex-1 py-1.5 text-xs font-bold rounded-md transition-all {{ $user_type === 'lecturer' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700' }}">DOSEN</button>
+                    <button type="button" wire:click="$set('user_type', 'staff')" class="flex-1 py-1.5 text-xs font-bold rounded-md transition-all {{ $user_type === 'staff' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700' }}">STAFF</button>
+                </div>
+
+                <!-- ID Number Input -->
                 <div>
-                    <label for="nim" class="block text-sm font-semibold text-slate-700 mb-1">NIM (Nomor Induk Mahasiswa)</label>
-                    <input wire:model="nim" type="text" id="nim" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder-slate-400 shadow-sm" placeholder="e.g. 12345678" />
-                    @error('nim') <span class="text-rose-500 text-xs mt-1 font-medium block">{{ $message }}</span> @enderror
+                    <label for="id_number" class="block text-sm font-semibold text-slate-700 mb-1">
+                        {{ $user_type === 'student' ? 'NIM (Nomor Induk Mahasiswa)' : 'NIP (Nomor Induk Pegawai)' }}
+                    </label>
+                    <input wire:model="id_number" type="text" id="id_number" class="w-full bg-white border border-slate-300 text-slate-800 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder-slate-400 shadow-sm" placeholder="e.g. {{ $user_type === 'student' ? '20210331' : '19850101...' }}" />
+                    @error('id_number') <span class="text-rose-500 text-xs mt-1 font-medium block">{{ $message }}</span> @enderror
                 </div>
 
                 <!-- Name Input -->
