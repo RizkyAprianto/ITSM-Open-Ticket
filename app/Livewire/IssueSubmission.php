@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Category;
 use App\Models\Ticket;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 
 class IssueSubmission extends Component
 {
@@ -15,6 +16,9 @@ class IssueSubmission extends Component
     public $phone = '';
     public $category_id = '';
     public $description = '';
+
+    // Honeypot: field jebakan untuk bot, harus selalu kosong
+    public string $honeypot = '';
 
     public $isSubmitted = false;
     public $ticketId = '';
@@ -55,8 +59,49 @@ class IssueSubmission extends Component
 
     public function submit()
     {
+        // =============================================
+        // LAYER 1: Honeypot Check (Anti-Bot)
+        // Jika field honeypot terisi, bot terdeteksi.
+        // Tampilkan fake success agar bot tidak tahu.
+        // =============================================
+        if (!empty($this->honeypot)) {
+            $this->isSubmitted = true; // fake success, tiket tidak disimpan
+            return;
+        }
+
+        // =============================================
+        // Validasi Form Biasa
+        // =============================================
         $this->validate();
 
+        // =============================================
+        // LAYER 2: NIM Cooldown via Cache (10 menit)
+        // Tidak memerlukan validasi SIAKAD.
+        // NIM hanya digunakan sebagai key cache.
+        // =============================================
+        $nimCacheKey = 'nim-cooldown:' . $this->id_number;
+        if (Cache::has($nimCacheKey)) {
+            $this->addError('id_number', 'Kamu baru saja mengirim laporan. Silakan tunggu beberapa menit sebelum mengirim laporan baru.');
+            return;
+        }
+
+        // =============================================
+        // LAYER 3: Duplicate Check per NIM + Kategori
+        // Cegah tiket ganda yang masih aktif.
+        // =============================================
+        $hasDuplicate = Ticket::where('guest_nim', $this->id_number)
+            ->where('category_id', $this->category_id)
+            ->whereIn('status', ['open', 'in_progress'])
+            ->exists();
+
+        if ($hasDuplicate) {
+            $this->addError('description', 'Kamu sudah memiliki laporan aktif untuk kategori ini. Tunggu hingga tiket sebelumnya diselesaikan.');
+            return;
+        }
+
+        // =============================================
+        // Buat Tiket (semua layer lolos)
+        // =============================================
         $formattedPhone = $this->formatPhoneNumber($this->phone);
         
         $typePrefix = [
@@ -75,6 +120,9 @@ class IssueSubmission extends Component
             'status' => 'open',
             'priority' => 'medium',
         ]);
+
+        // Aktifkan cooldown 10 menit untuk NIM ini setelah berhasil submit
+        Cache::put($nimCacheKey, true, now()->addMinutes(10));
 
         $this->ticketId = (string) $ticket->uuid;
         $this->isSubmitted = true;

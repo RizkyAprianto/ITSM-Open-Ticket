@@ -90,6 +90,11 @@
                     @error('description') <span class="text-rose-500 text-xs mt-1 font-medium block">{{ $message }}</span> @enderror
                 </div>
 
+                {{-- Honeypot: Field jebakan untuk bot. Jangan diisi. --}}
+                <div style="display:none;" aria-hidden="true">
+                    <input type="text" wire:model="honeypot" name="website" autocomplete="off" tabindex="-1">
+                </div>
+
                 <!-- Submit Button -->
                 <div class="pt-2">
                     <button type="submit" class="relative group w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300 shadow-md hover:shadow-lg overflow-hidden">

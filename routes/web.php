@@ -27,4 +27,12 @@ Route::get('/executive/staff-work', \App\Livewire\ExecutiveStaffWork::class)
     ->middleware(['auth', 'role:kepala_it,dekan'])
     ->name('executive.staff-work');
 
+Route::get('/executive/report/pdf', [\App\Http\Controllers\ReportController::class, 'downloadPdf'])
+    ->middleware(['auth', 'role:kepala_it,dekan'])
+    ->name('executive.report.pdf');
+
+Route::get('/executive/report/excel', [\App\Http\Controllers\ReportController::class, 'downloadExcel'])
+    ->middleware(['auth', 'role:kepala_it,dekan'])
+    ->name('executive.report.excel');
+
 require __DIR__.'/auth.php';

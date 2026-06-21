@@ -8,6 +8,30 @@ use App\Models\Category;
 
 class ExecutiveDashboard extends Component
 {
+    public int $filterMonth = 0; // 0 = Semua bulan
+    public int $filterYear = 0;  // 0 = Semua tahun
+
+    public function mount()
+    {
+        $this->filterYear = now()->year;
+    }
+
+    public function getPdfUrlProperty(): string
+    {
+        return route('executive.report.pdf', [
+            'month' => $this->filterMonth,
+            'year' => $this->filterYear
+        ]);
+    }
+
+    public function getExcelUrlProperty(): string
+    {
+        return route('executive.report.excel', [
+            'month' => $this->filterMonth,
+            'year' => $this->filterYear
+        ]);
+    }
+
     public function render()
     {
         // Metric 1: Total Overall
@@ -31,12 +55,18 @@ class ExecutiveDashboard extends Component
         $chartCategoryNames = $categories->pluck('name')->toArray();
         $chartCategoryCounts = $categories->pluck('tickets_count')->toArray();
 
+        // Years for dropdown
+        $oldestTicket = Ticket::orderBy('created_at', 'asc')->first();
+        $startYear = $oldestTicket ? $oldestTicket->created_at->year : now()->year;
+        $years = range($startYear, now()->year);
+
         return view('livewire.executive-dashboard', [
             'totalTickets' => $totalTickets,
             'chartStatusData' => json_encode($chartStatusData),
             'chartCategoryNames' => json_encode($chartCategoryNames),
             'chartCategoryCounts' => json_encode($chartCategoryCounts),
-            'recentTickets' => Ticket::latest()->take(5)->get()
+            'recentTickets' => Ticket::latest()->take(5)->get(),
+            'years' => $years,
         ])->layout('components.layouts.executive');
     }
 }
