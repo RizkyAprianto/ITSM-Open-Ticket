@@ -33,8 +33,9 @@
                 <div class="bg-white border border-slate-200 shadow-inner rounded-lg p-3 inline-block">
                     <span class="text-slate-800 font-mono font-bold tracking-wider">{{ substr($ticketId, 0, 8) }}</span>
                 </div>
-                <div class="mt-6">
-                    <button wire:click="$set('isSubmitted', false)" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors duration-200">Kirim Laporan Baru</button>
+                <div class="mt-6 flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+                    <button wire:click="$dispatch('openTrackingModal', { nim: '{{ $id_number }}' })" class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg shadow-sm hover:bg-blue-700 hover:shadow-md transition-all">Lacak Tiket Ini</button>
+                    <button wire:click="$set('isSubmitted', false)" class="w-full sm:w-auto text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors duration-200 py-2.5">Kirim Laporan Baru</button>
                 </div>
             </div>
         @else
@@ -117,7 +118,16 @@
                     </button>
                 </div>
             </form>
+
+            <div class="mt-6 text-center">
+                <button type="button" wire:click="$dispatch('openTrackingModal')" class="text-sm font-medium text-slate-500 hover:text-blue-600 transition-colors">
+                    Sudah pernah mengirim laporan? <span class="font-bold underline decoration-blue-300 underline-offset-2">Lacak di sini</span>
+                </button>
+            </div>
         @endif
         
     </div>
+    
+    <!-- Modal Component -->
+    <livewire:public-ticket-tracking />
 </div>

@@ -12,8 +12,25 @@ class ExecutiveStaffWork extends Component
 
     public $statusFilter = '';
     public $search = '';
+    public $startDate = '';
+    public $endDate = '';
 
     public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatusFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStartDate()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedEndDate()
     {
         $this->resetPage();
     }
@@ -34,6 +51,26 @@ class ExecutiveStaffWork extends Component
                   ->orWhere('uuid', 'like', '%' . $this->search . '%');
             });
         }
+
+        if ($this->startDate && $this->endDate) {
+            $query->whereBetween('created_at', [
+                $this->startDate . ' 00:00:00', 
+                $this->endDate . ' 23:59:59'
+            ]);
+        } elseif ($this->startDate) {
+            $query->where('created_at', '>=', $this->startDate . ' 00:00:00');
+        } elseif ($this->endDate) {
+            $query->where('created_at', '<=', $this->endDate . ' 23:59:59');
+        }
+
+        // Hide resolved tickets that are not from today
+        $query->where(function($q) {
+            $q->where('status', '!=', 'resolved')
+              ->orWhere(function($subQ) {
+                  $subQ->where('status', 'resolved')
+                       ->whereDate('updated_at', today());
+              });
+        });
 
         $tickets = $query->paginate(15);
 

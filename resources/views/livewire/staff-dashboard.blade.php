@@ -1,6 +1,6 @@
 <div>
     <div class="mb-6 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-        <div class="flex items-center space-x-4 w-full sm:w-auto">
+        <div class="flex flex-wrap items-center gap-4 w-full sm:w-auto">
             <input type="text" wire:model.live="search" placeholder="Cari Nama, NIM, atau Judul..." class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm w-full sm:w-64">
             
             <select wire:model.live="statusFilter" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
@@ -10,6 +10,12 @@
                 <option value="resolved">Resolved</option>
                 <option value="closed">Closed</option>
             </select>
+
+            <div class="flex items-center space-x-2">
+                <input type="date" wire:model.live="startDate" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+                <span class="text-gray-500">s/d</span>
+                <input type="date" wire:model.live="endDate" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">
+            </div>
         </div>
     </div>
 
@@ -44,22 +50,20 @@
                             <div class="text-sm text-gray-500 line-clamp-2 italic">"{{ $ticket->description }}"</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <select 
-                                wire:change="updateStatus({{ $ticket->id }}, $event.target.value)"
-                                class="text-xs font-semibold rounded-full px-2 py-1 border-none focus:ring-2 focus:ring-blue-500
-                                {{ $ticket->status === 'open' ? 'bg-red-100 text-red-800' : '' }}
-                                {{ $ticket->status === 'in_progress' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                {{ $ticket->status === 'resolved' ? 'bg-green-100 text-green-800' : '' }}
-                                {{ $ticket->status === 'closed' ? 'bg-gray-100 text-gray-800' : '' }}
+                            <button 
+                                wire:click="openStatusModal({{ $ticket->id }})"
+                                class="text-xs font-semibold rounded-full px-3 py-1.5 border hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2
+                                {{ $ticket->status === 'open' ? 'bg-red-100 text-red-800 border-red-200 focus:ring-red-500' : '' }}
+                                {{ $ticket->status === 'in_progress' ? 'bg-yellow-100 text-yellow-800 border-yellow-200 focus:ring-yellow-500' : '' }}
+                                {{ $ticket->status === 'resolved' ? 'bg-green-100 text-green-800 border-green-200 focus:ring-green-500' : '' }}
+                                {{ $ticket->status === 'closed' ? 'bg-gray-100 text-gray-800 border-gray-200 focus:ring-gray-500' : '' }}
                                 ">
-                                <option value="open" {{ $ticket->status === 'open' ? 'selected' : '' }}>Open</option>
-                                <option value="in_progress" {{ $ticket->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                                <option value="resolved" {{ $ticket->status === 'resolved' ? 'selected' : '' }}>Resolved</option>
-                                <option value="closed" {{ $ticket->status === 'closed' ? 'selected' : '' }}>Closed</option>
-                            </select>
+                                {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                                <svg class="inline-block w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $ticket->created_at->diffForHumans() }}
+                            {{ $ticket->created_at->format('d M Y H:i') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                             <!-- WhatsApp Action -->
@@ -90,4 +94,60 @@
             {{ $tickets->links() }}
         </div>
     </div>
+
+    <!-- Status Update Modal -->
+    @if($showModal)
+    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" wire:click="closeStatusModal"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form wire:submit.prevent="updateStatus">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Ubah Status Tiket
+                        </h3>
+                        <div class="mt-4 space-y-4">
+                            <div>
+                                <label for="newStatus" class="block text-sm font-medium text-gray-700">Status Baru</label>
+                                <select id="newStatus" wire:model.live="newStatus" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                    <option value="open">Open</option>
+                                    <option value="in_progress">In Progress</option>
+                                    <option value="resolved">Resolved</option>
+                                    <option value="closed">Closed</option>
+                                </select>
+                                @error('newStatus') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                            </div>
+
+                            @if($newStatus === 'resolved')
+                                <div>
+                                    <label for="resolutionNote" class="block text-sm font-medium text-gray-700">Catatan Penyelesaian</label>
+                                    <textarea id="resolutionNote" wire:model="resolutionNote" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                                    @error('resolutionNote') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                                
+                                <div>
+                                    <label for="resolutionEvidence" class="block text-sm font-medium text-gray-700">Bukti/Eviden (Wajib)</label>
+                                    <input type="file" id="resolutionEvidence" wire:model="resolutionEvidence" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                    @error('resolutionEvidence') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                            Simpan Perubahan
+                        </button>
+                        <button type="button" wire:click="closeStatusModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>

@@ -22,6 +22,12 @@
                 <option value="resolved">Resolved (Selesai)</option>
                 <option value="closed">Closed (Ditutup)</option>
             </select>
+
+            <div class="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg px-2">
+                <input type="date" wire:model.live="startDate" class="border-none focus:ring-0 text-sm py-2">
+                <span class="text-gray-400 text-sm">s/d</span>
+                <input type="date" wire:model.live="endDate" class="border-none focus:ring-0 text-sm py-2">
+            </div>
         </div>
     </div>
 
@@ -34,7 +40,8 @@
                         <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tiket ID</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Pelapor</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Permasalahan</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status & Waktu</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tgl Lapor</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status & Update</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -51,6 +58,9 @@
                             <div class="text-sm font-bold text-slate-800 mb-0.5">{{ $ticket->title }}</div>
                             <div class="text-xs text-indigo-600 font-medium mb-1">{{ optional($ticket->category)->name ?? 'Tanpa Kategori' }}</div>
                             <div class="text-sm text-slate-600 line-clamp-2 italic">"{{ $ticket->description }}"</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                            {{ $ticket->created_at->format('d M Y H:i') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="mb-2">
@@ -72,7 +82,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-slate-500">
+                        <td colspan="5" class="px-6 py-10 text-center text-slate-500">
                             Tidak ada tiket yang ditemukan dengan filter saat ini.
                         </td>
                     </tr>
