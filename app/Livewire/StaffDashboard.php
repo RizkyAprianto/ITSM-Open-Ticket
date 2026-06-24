@@ -24,9 +24,39 @@ class StaffDashboard extends Component
     public $resolutionNote = '';
     public $resolutionEvidence = null;
 
+    // Notification Properties
+    public $lastCheckedTicketId = 0;
+
     protected $rules = [
         'newStatus' => 'required|in:open,in_progress,resolved,closed',
     ];
+
+    public function mount()
+    {
+        // Initialize last checked with the highest ID currently in DB
+        $latestTicket = Ticket::latest('id')->first();
+        if ($latestTicket) {
+            $this->lastCheckedTicketId = $latestTicket->id;
+        }
+    }
+
+    public function checkNewTickets()
+    {
+        $newTickets = Ticket::where('id', '>', $this->lastCheckedTicketId)
+            ->where('status', 'open')
+            ->get();
+
+        if ($newTickets->count() > 0) {
+            // Get the highest ID from the new tickets
+            $this->lastCheckedTicketId = $newTickets->max('id');
+            
+            // Dispatch event for the browser to catch
+            $latest = $newTickets->first(); // grab one for the toast text
+            $this->dispatch('new-ticket-alert', title: $latest->title);
+            
+            // The table will auto-refresh on the next render
+        }
+    }
 
     public function updatedSearch()
     {
