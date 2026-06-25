@@ -151,52 +151,66 @@
     </div>
     @endif
 
-    <!-- Real-time Notification Toast & Audio -->
+    <!-- Real-time Notification Toast & Audio (White Glassmorphism) -->
     <audio id="notification-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
     
     <div 
-        x-data="{ show: false, message: '' }"
+        x-data="{ show: false, message: '', progress: 100, interval: null }"
         x-on:new-ticket-alert.window="
             message = $event.detail.title;
             show = true;
-            document.getElementById('notification-sound').play().catch(e => console.log('Audio play error:', e));
-            setTimeout(() => { show = false }, 5000);
+            progress = 100;
+            clearInterval(interval);
+            document.getElementById('notification-sound').play().catch(e => console.log('Audio error:', e));
+            
+            // Progress bar animation (5000ms total)
+            interval = setInterval(() => {
+                progress -= (100 / 500); // decrement every 10ms
+                if(progress <= 0) {
+                    clearInterval(interval);
+                    show = false;
+                }
+            }, 10);
         "
         x-show="show"
-        x-transition:enter="transform ease-out duration-300 transition"
-        x-transition:enter-start="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+        x-transition:enter="transform ease-out duration-500 transition"
+        x-transition:enter-start="translate-y-4 opacity-0 sm:translate-y-0 sm:translate-x-10"
         x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
-        x-transition:leave="transition ease-in duration-100"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-        class="fixed bottom-4 right-4 sm:top-6 sm:right-6 z-[100] max-w-sm w-full bg-white shadow-2xl rounded-xl pointer-events-auto border border-blue-100 overflow-hidden"
+        x-transition:leave="transition ease-in duration-300"
+        x-transition:leave-start="opacity-100 sm:translate-x-0"
+        x-transition:leave-end="opacity-0 sm:translate-x-10"
+        class="fixed bottom-4 right-4 sm:top-6 sm:bottom-auto sm:right-6 z-[100] max-w-sm w-full bg-white/80 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] rounded-2xl pointer-events-auto border border-white/60 overflow-hidden"
         style="display: none;"
     >
-        <div class="p-4 relative overflow-hidden">
-            <div class="absolute inset-0 bg-blue-50 opacity-50"></div>
-            <div class="relative flex items-start">
+        <div class="p-5 relative">
+            <div class="flex items-start gap-4">
                 <div class="flex-shrink-0 pt-0.5">
-                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <svg class="h-6 w-6 text-blue-600 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 border border-blue-200/50 flex items-center justify-center shadow-inner">
+                        <svg class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                     </div>
                 </div>
-                <div class="ml-3 w-0 flex-1">
-                    <p class="text-sm font-bold text-slate-900">
-                        Laporan Baru Masuk!
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-slate-800 tracking-tight">
+                        Laporan Baru Masuk
                     </p>
-                    <p class="mt-1 text-sm font-medium text-slate-600" x-text="message"></p>
+                    <p class="mt-1 text-sm font-medium text-slate-500 line-clamp-2" x-text="message"></p>
                 </div>
-                <div class="ml-4 flex-shrink-0 flex">
-                    <button @click="show = false" class="bg-transparent rounded-md inline-flex text-slate-400 hover:text-slate-600 focus:outline-none">
-                        <span class="sr-only">Close</span>
-                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <div class="flex-shrink-0 flex ml-2">
+                    <button @click="show = false; clearInterval(interval)" class="bg-transparent rounded-full p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100/50 focus:outline-none transition-colors">
+                        <span class="sr-only">Tutup</span>
+                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
                     </button>
                 </div>
             </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="h-1 w-full bg-slate-100/50">
+            <div class="h-full bg-gradient-to-r from-blue-400 to-indigo-500" :style="`width: ${progress}%`"></div>
         </div>
     </div>
 </div>
